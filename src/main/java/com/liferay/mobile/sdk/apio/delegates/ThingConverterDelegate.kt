@@ -53,4 +53,8 @@ fun <T> convert(clazz: Class<T>, thing: Thing): T? {
     return t
 }
 
-var converters: Map<String, (Thing) -> Any> = emptyMap()
+fun addConverter(converter: (Thing) -> Any, name: String) {
+    converters.put(name, converter)
+}
+
+var converters: MutableMap<String, (Thing) -> Any> = mutableMapOf()
