@@ -15,12 +15,11 @@ buildscript {
 	}
 }
 
-plugins {
-	id 'maven-publish'
-	id 'com.jfrog.bintray' version '1.7.1'
-}
+//plugins {
+//	id 'maven-publish'
+//	id 'com.jfrog.bintray' version '1.7.1'
+//}
 
-apply plugin: 'com.liferay.source.formatter'
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -40,10 +39,10 @@ ext {
 group 'com.liferay.mobile'
 version '2.0.2'
 
-formatSource {
-	baseDirName = 'src/main/java'
-	copyrightFileName = 'LICENSE'
-}
+//formatSource {
+//	baseDirName = 'src/main/java'
+//	copyrightFileName = 'LICENSE'
+//}
 
 android {
 	buildToolsVersion '27.0.3'
@@ -75,24 +74,24 @@ dependencies {
 	testImplementation group: 'org.json', name: 'json', version: '20160212'
 }
 
-bintray {
-	user = findProperty('user') ?: ''
-	key = findProperty('key') ?: ''
-
-	publications = ['mavenJava']
-
-	pkg {
-		repo = 'liferay-mobile'
-		name = project.artifactId
-		userOrg = 'liferay'
-		licenses = ['LGPL-2.1']
-		vcsUrl = 'https://github.com/brunofarache/liferay-android-sdk.git'
-
-		version {
-			name = project.version
-		}
-	}
-}
+//bintray {
+//	user = findProperty('user') ?: ''
+//	key = findProperty('key') ?: ''
+//
+//	publications = ['mavenJava']
+//
+//	pkg {
+//		repo = 'liferay-mobile'
+//		name = project.artifactId
+//		userOrg = 'liferay'
+//		licenses = ['LGPL-2.1']
+//		vcsUrl = 'https://github.com/brunofarache/liferay-android-sdk.git'
+//
+//		version {
+//			name = project.version
+//		}
+//	}
+//}
 
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.14.1'
