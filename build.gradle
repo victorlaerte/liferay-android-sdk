@@ -22,6 +22,7 @@ plugins {
 
 apply plugin: 'com.liferay.source.formatter'
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 repositories {
 	mavenLocal()
