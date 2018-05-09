@@ -160,15 +160,23 @@ private fun foldEntry(context: Context?) = { acc: FoldedAttributes, entry: Entry
 
 	when {
 		value is Map<*, *> -> (value as? Map<String, Any>)?.apply {
-			val result = flatten(this, context)
+			if (this.containsKey("@id")) {
+				val result = flatten(this, context)
 
-			result?.let {
-				val (thing, embeddedThings) = it
-				attributes[key] = Relation(thing.id)
+				result?.let {
+					val (thing, embeddedThings) = it
+					attributes[key] = Relation(thing.id)
 
-				things.put(thing.id, thing)
+					things.put(thing.id, thing)
+
+					things.putAll(embeddedThings)
+				}
+			}
+			else {
+				val (attr, embeddedThings) = foldTree(this, context)
 
 				things.putAll(embeddedThings)
+				attributes[key] = attr
 			}
 		}
 		value is List<*> && !value.filterIsInstance<Map<String, Any>>().isEmpty() ->
