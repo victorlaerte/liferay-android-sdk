@@ -128,7 +128,8 @@ private fun flatten(jsonObject: Map<String, Any>, parentContext: Context?): Pair
 	if (!jsonObject.containsKey("statusCode")) {
 		val id = jsonObject["@id"] as String
 
-		val types = jsonObject["@type"] as? List<String> ?: listOf()
+		val types = (jsonObject["@type"] as? String)?.let { listOf(it) } ?:
+			jsonObject["@type"] as? List<String> ?: listOf()
 
 		val context = contextFrom(jsonObject["@context"] as? List<Any>, parentContext)
 
