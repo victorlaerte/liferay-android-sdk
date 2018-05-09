@@ -182,19 +182,35 @@ private fun foldEntry(context: Context?) = { acc: FoldedAttributes, entry: Entry
 		}
 		value is List<*> && !value.filterIsInstance<Map<String, Any>>().isEmpty() ->
 			(value as? List<Map<String, Any>>)?.apply {
-				val list = this.map { flatten(it, context)!! }
 
-				val mutableList = mutableListOf<Relation>()
+				if (this.first().containsKey("@id")) {
+					val list = this.map { flatten(it, context)!! }
+					val mutableList = mutableListOf<Relation>()
 
-				for ((thing, embeddedThings) in list) {
-					mutableList.add(Relation(thing.id))
+					for ((thing, embeddedThings) in list) {
+						mutableList.add(Relation(thing.id))
 
-					things.put(thing.id, thing)
+						things.put(thing.id, thing)
 
-					things.putAll(embeddedThings)
+						things.putAll(embeddedThings)
+					}
+
+					attributes[key] = mutableList
+				}
+				else {
+					val pairsList = this.map { foldTree(it, context) }
+
+					val foldedList = mutableListOf<Map<String, Any>>()
+
+					for ((list, embeddedThings) in pairsList) {
+						foldedList.add(list)
+
+						things.putAll(embeddedThings)
+					}
+
+					attributes[key] = foldedList
 				}
 
-				attributes[key] = mutableList
 			}
 		context != null && context.isId(key) -> with(value as String) {
 			things[this] = null
