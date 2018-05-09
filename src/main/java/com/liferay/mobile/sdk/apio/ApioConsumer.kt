@@ -132,10 +132,7 @@ private fun flatten(jsonObject: Map<String, Any>, parentContext: Context?): Pair
 
 		val context = contextFrom(jsonObject["@context"] as? List<Any>, parentContext)
 
-		val (attributes, things) = jsonObject
-			.filter { it.key !in listOf("@id", "@type", "@context") }
-			.entries
-			.fold(mutableMapOf<String, Any>() to mutableMapOf(), foldEntry(context))
+		val (attributes, things) = foldTree(jsonObject, context)
 
 		val thing = Thing(id, types, attributes)
 
@@ -143,6 +140,15 @@ private fun flatten(jsonObject: Map<String, Any>, parentContext: Context?): Pair
 	}
 	return null
 }
+
+private fun foldTree(jsonObject: Map<String, Any>,
+	context: Context?): Pair<MutableMap<String, Any>, MutableMap<String, Thing?>> {
+	return jsonObject
+		.filter { it.key !in listOf("@id", "@type", "@context") }
+		.entries
+		.fold(mutableMapOf<String, Any>() to mutableMapOf(), foldEntry(context))
+}
+
 
 typealias FoldedAttributes = Pair<MutableMap<String, Any>, MutableMap<String, Thing?>>
 
