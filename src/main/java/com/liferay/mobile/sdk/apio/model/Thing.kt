@@ -17,16 +17,18 @@ package com.liferay.mobile.sdk.apio.model
 import com.liferay.mobile.sdk.apio.ApioException
 import com.liferay.mobile.sdk.apio.graph
 
-data class Thing(val id: String, val type: List<String>, val attributes: Map<String, Any>, val name: String? = null,
-    val operations: List<Operation> = listOf())
+typealias Type = List<String>
+
+data class Thing(val id: String, val type: Type, val attributes: Map<String, Any>, val name: String? = null,
+    val operations: MutableMap<String, Operation?> = mutableMapOf())
 
 data class Relation(val id: String)
 
-data class Operation(val id: String, val type: String, val method: String, val form: OperationForm)
+data class Operation(val id: String, val type: Type, val method: String, var form: OperationForm)
 
-data class OperationForm(val id: String, val type: List<String>,  val properties: List<Property> = listOf())
+data class OperationForm(val id: String, var properties: List<Property> = listOf())
 
-data class Property(val type: List<String>, val name: String, val required: Boolean)
+data class Property(val type: Type, val name: String, val required: Boolean)
 
 data class Context(val vocab: String, val attributeContext: Map<String, Any>)
 
