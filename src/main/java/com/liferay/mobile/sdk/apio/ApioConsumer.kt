@@ -38,6 +38,85 @@ fun fetch(
 	}
 }
 
+fun performOperation(thingId: String, operationId: String, fillFields: (List<Property>) -> Map<String, Any>,
+	onComplete: (Result<Response, Exception>) -> Unit) {
+
+	val thing = graph[thingId]?.value
+
+	thing?.let {
+		var operation = thing.operations[operationId]
+
+		operation?.let {
+			operation.form?.let { form ->
+				if (form.properties.isEmpty()) {
+					requestProperties(form.id) {
+						form.properties = it
+						thing.operations[operationId] = operation
+
+						val attributes = fillFields(it)
+
+						performOperationRequest(thing.id, operation.method, attributes, onComplete)
+					}
+				}
+				else {
+					val attributes = fillFields(form.properties)
+
+					performOperationRequest(thing.id, operation.method, attributes, onComplete)
+				}
+			} ?: performOperationRequest(thing.id, operation.method, emptyMap(), onComplete)
+
+		} ?: onComplete(Result.of { throw ApioException("Thing $it doesn't have the operation $operationId") })
+
+	} ?: onComplete(Result.of { throw ApioException("Thing not found") })
+}
+
+fun performOperationRequest(url: String, method: String, attributes: Map<String, Any>,
+	onComplete: (Result<Response, Exception>) -> Unit) {
+	launch(UI) {
+		async(CommonPool) {
+
+			val json = Gson().toJson(attributes)
+			val request = createRequest(HttpUrl.parse(url), credential).newBuilder()
+				.method(method, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json))
+				.build()
+
+			val okHttpClient = OkHttpClient()
+
+			try {
+				Result.of(okHttpClient.newCall(request).execute())
+			} catch (e: Exception) {
+				Result.error(e)
+			}
+		}.await().let(onComplete)
+	}
+}
+
+fun requestProperties(url: String, onComplete: (List<Property>) -> Unit) {
+	val request = createRequest(HttpUrl.parse(url), credential)
+
+	launch(UI) {
+		async(CommonPool) {
+			val okHttpClient = OkHttpClient()
+			val response = okHttpClient.newCall(request).execute()
+
+			val json = response.body().string()
+
+			val mapType = TypeToken.getParameterized(Map::class.java, String::class.java, Any::class.java).type
+
+			val jsonObject = Gson().fromJson<Map<String, Any>>(json, mapType)
+
+			val supportedProperties = jsonObject["supportedProperty"] as List<Map<String, Any>>
+
+			supportedProperties.map {
+				val type = parseType(it["@type"])
+				val name = it["property"] as String
+				val required = it["required"] as Boolean
+				Property(type, name, required)
+			}
+		}.await().let(onComplete)
+	}
+}
+
 fun requestParseWaitLoop(url: HttpUrl,
 	fields: Map<String, List<String>>,
 	embedded: List<String>,
@@ -103,6 +182,7 @@ private fun parse(
 				id to Node(id, newThing)
 			}
 
+			graph.put(thing.id, Node(thing.id, thing))
 			graph.putAll(nodes)
 
 			Result.of(thing)
@@ -128,19 +208,41 @@ private fun flatten(jsonObject: Map<String, Any>, parentContext: Context?): Pair
 	if (!jsonObject.containsKey("statusCode")) {
 		val id = jsonObject["@id"] as String
 
-		val types = (jsonObject["@type"] as? String)?.let { listOf(it) } ?:
-			jsonObject["@type"] as? List<String> ?: listOf()
+		val types = parseType(jsonObject["@type"])
 
 		val context = contextFrom(jsonObject["@context"] as? List<Any>, parentContext)
 
 		val (attributes, things) = foldTree(jsonObject, context)
 
-		val thing = Thing(id, types, attributes)
+		val operations = parseOperations(jsonObject)
+
+		val thing = Thing(id, types, attributes, operations =  operations)
 
 		return thing to things
 	}
 	return null
 }
+
+private fun parseOperations(jsonObject: Map<String, Any>): MutableMap<String, Operation?> {
+	val operationsJson = jsonObject["operation"] as? List<Map<String, Any>> ?: listOf()
+
+	return operationsJson.map {
+		val id = it["@id"] as String
+		val method = it["method"] as String
+		val expects = it["expects"] as? String
+		val type = parseType(it["@type"])
+
+		val form = expects?.let { OperationForm(it) }
+
+		id to Operation(id, type, method, form)
+	}.toMap().toMutableMap()
+}
+
+private fun parseType(type: Any?): List<String> {
+	return (type as? String)?.let { listOf(it) } ?:
+	type as? List<String> ?: listOf()
+}
+
 
 private fun foldTree(jsonObject: Map<String, Any>,
 	context: Context?): Pair<MutableMap<String, Any>, MutableMap<String, Thing?>> {
