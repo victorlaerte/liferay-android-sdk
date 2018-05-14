@@ -67,6 +67,14 @@ operator fun Relation.get(attribute: String): Any? = graph[id]?.value?.get(attri
 
 fun Thing.merge(value: Thing?): Thing = value?.let { Thing(id, type, attributes + it.attributes) } ?: this
 
+fun Thing.containsOperation(operationId: String): Boolean = operations.keys.filter { it.contains(operationId) }.isEmpty()
+
+fun Thing.getOperation(operationId: String): Operation? {
+    val key = operations.keys.filter { it.contains(operationId) }.firstOrNull()
+
+    return key?.let { operations[it] }
+}
+
 fun OperationForm.getFormProperties(onComplete: (List<Property>) -> Unit) {
     requestProperties(id) {
         this.properties = it
