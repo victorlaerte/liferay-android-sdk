@@ -24,7 +24,7 @@ data class Thing(val id: String, val type: Type, val attributes: Map<String, Any
 
 data class Relation(val id: String)
 
-data class Operation(val id: String, val type: Type, val method: String, var form: OperationForm)
+data class Operation(val id: String, val type: Type, val method: String, var form: OperationForm?)
 
 data class OperationForm(val id: String, var properties: List<Property> = listOf())
 
