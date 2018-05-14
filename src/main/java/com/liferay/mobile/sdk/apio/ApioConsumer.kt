@@ -38,7 +38,8 @@ fun fetch(
 	}
 }
 
-fun performOperation(thingId: String, operationId: String, fillFields: (List<Property>) -> Map<String, Any>,
+fun performOperation(thingId: String, operationId: String,
+	fillFields: (List<Property>) -> Map<String, Any> = { emptyMap() },
 	onComplete: (Result<Response, Exception>) -> Unit) {
 
 	val thing = graph[thingId]?.value
