@@ -44,7 +44,7 @@ fun performOperation(thingId: String, operationId: String, fillFields: (List<Pro
 	val thing = graph[thingId]?.value
 
 	thing?.let {
-		var operation = thing.operations[operationId]
+		val operation = thing.operations[operationId]
 
 		operation?.let {
 			operation.form?.let { form ->
@@ -223,7 +223,7 @@ private fun flatten(jsonObject: Map<String, Any>, parentContext: Context?): Pair
 	return null
 }
 
-private fun parseOperations(jsonObject: Map<String, Any>): MutableMap<String, Operation?> {
+private fun parseOperations(jsonObject: Map<String, Any>): MutableMap<String, Operation> {
 	val operationsJson = jsonObject["operation"] as? List<Map<String, Any>> ?: listOf()
 
 	return operationsJson.map {

@@ -21,7 +21,7 @@ import com.liferay.mobile.sdk.apio.requestProperties
 typealias Type = List<String>
 
 data class Thing(val id: String, val type: Type, val attributes: Map<String, Any>, val name: String? = null,
-    val operations: MutableMap<String, Operation?> = mutableMapOf())
+    val operations: MutableMap<String, Operation> = mutableMapOf())
 
 data class Relation(val id: String)
 
