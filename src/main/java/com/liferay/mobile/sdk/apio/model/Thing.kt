@@ -16,6 +16,7 @@ package com.liferay.mobile.sdk.apio.model
 
 import com.liferay.mobile.sdk.apio.ApioException
 import com.liferay.mobile.sdk.apio.graph
+import com.liferay.mobile.sdk.apio.requestProperties
 
 typealias Type = List<String>
 
@@ -65,3 +66,11 @@ operator fun Thing.get(attribute: String): Any? = attributes[attribute]
 operator fun Relation.get(attribute: String): Any? = graph[id]?.value?.get(attribute)
 
 fun Thing.merge(value: Thing?): Thing = value?.let { Thing(id, type, attributes + it.attributes) } ?: this
+
+fun OperationForm.getFormProperties(onComplete: (List<Property>) -> Unit) {
+    requestProperties(id) {
+        this.properties = it
+
+        onComplete(it)
+    }
+}
