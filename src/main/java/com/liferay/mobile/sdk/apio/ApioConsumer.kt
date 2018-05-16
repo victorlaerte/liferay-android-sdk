@@ -56,15 +56,15 @@ fun performOperation(thingId: String, operationId: String,
 
 						val attributes = fillFields(it)
 
-						performOperationRequest(thing.id, operation.method, attributes, onComplete)
+						performOperationRequest(operation.target, operation.method, attributes, onComplete)
 					}
 				}
 				else {
 					val attributes = fillFields(form.properties)
 
-					performOperationRequest(thing.id, operation.method, attributes, onComplete)
+					performOperationRequest(operation.target, operation.method, attributes, onComplete)
 				}
-			} ?: performOperationRequest(thing.id, operation.method, emptyMap(), onComplete)
+			} ?: performOperationRequest(operation.target, operation.method, emptyMap(), onComplete)
 
 		} ?: onComplete(Result.of { throw ApioException("Thing $it doesn't have the operation $operationId") })
 
@@ -229,13 +229,14 @@ private fun parseOperations(jsonObject: Map<String, Any>): MutableMap<String, Op
 
 	return operationsJson.map {
 		val id = it["@id"] as String
+		val target = it["target"] as String
 		val method = it["method"] as String
 		val expects = it["expects"] as? String
 		val type = parseType(it["@type"])
 
 		val form = expects?.let { OperationForm(it) }
 
-		id to Operation(id, type, method, form)
+		id to Operation(id, target, type, method, form)
 	}.toMap().toMutableMap()
 }
 
