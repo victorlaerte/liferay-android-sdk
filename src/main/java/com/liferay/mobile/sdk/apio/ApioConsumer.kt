@@ -14,6 +14,7 @@
 
 package com.liferay.mobile.sdk.apio
 
+import android.net.Uri
 import com.github.kittinunf.result.Result
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -23,7 +24,11 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import java.io.ByteArrayOutputStream
+import java.io.FileNotFoundException
 import java.io.IOException
+import java.io.InputStream
+import java.net.URI
 import kotlin.collections.Map.Entry
 
 fun fetch(
@@ -71,14 +76,13 @@ fun performOperation(thingId: String, operationId: String,
 	} ?: onComplete(Result.of { throw ApioException("Thing not found") })
 }
 
-fun performOperationRequest(url: String, method: String, attributes: Map<String, Any>,
+private fun performOperationRequest(url: String, method: String, attributes: Map<String, Any>,
 	onComplete: (Result<Response, Exception>) -> Unit) {
 	launch(UI) {
 		async(CommonPool) {
 
-			val json = Gson().toJson(attributes)
 			val request = createRequest(HttpUrl.parse(url), credential).newBuilder()
-				.method(method, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json))
+				.method(method, getRequestBody(attributes))
 				.build()
 
 			val okHttpClient = OkHttpClient()
@@ -90,6 +94,41 @@ fun performOperationRequest(url: String, method: String, attributes: Map<String,
 			}
 		}.await().let(onComplete)
 	}
+}
+
+private fun getRequestBody(attributes: Map<String, Any>): RequestBody {
+	if (attributes.values.none { it is InputStream }) {
+		// No inputStream in the attributes means json body
+		val json = Gson().toJson(attributes)
+		return RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json)
+	} else {
+		// inputStream in the attributes means multipart body
+		val builder = MultipartBuilder()
+			.type(MultipartBuilder.FORM)
+
+		for ((key, value) in attributes) {
+			if (value is InputStream) {
+				val byteArray = getByteArrayFromInputStream(value)
+				builder.addFormDataPart(key, key, RequestBody.create(MediaType.parse("image/jpeg"), byteArray))
+			} else {
+				builder.addFormDataPart(key, value as String)
+			}
+		}
+
+		return builder.build()
+	}
+}
+
+fun getByteArrayFromInputStream(inputStream: InputStream): ByteArray {
+
+	val byteBuffer = ByteArrayOutputStream()
+	inputStream.use { input ->
+		byteBuffer.use {  output ->
+			input.copyTo(output)
+		}
+	}
+
+	return byteBuffer.toByteArray()
 }
 
 fun requestProperties(url: String, onComplete: (List<Property>) -> Unit) {
