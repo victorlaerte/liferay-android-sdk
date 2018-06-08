@@ -201,9 +201,9 @@ private fun parse(
 			graph.put(thing.id, Node(thing.id, thing))
 			graph.putAll(nodes)
 
-			Result.of(thing)
-		}
-	} ?: Result.of { throw ApioException("Not Found") }
+            Result.of(thing)
+        }
+    } ?: Result.of(null, { ApioException("Not Found") })
 
 class Node(val id: String, var value: Thing? = null)
 
@@ -342,4 +342,4 @@ private fun foldEntry(context: Context?) = { acc: FoldedAttributes, entry: Entry
 	attributes to things
 }
 
-class ApioException(s: String) : Throwable(s)
+class ApioException(s: String) : Exception(s)
