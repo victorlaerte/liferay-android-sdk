@@ -49,7 +49,7 @@ fun performOperationAndParse(thingId: String, operationId: String,
 					parse(it)
 				}.await().let(onComplete)
 			}
-        } ?: onComplete(Result.of { throw ApioException("No thing returned") })
+        } ?: onComplete(Result.of(null, { ApioException("No thing returned") }))
     }
 }
 
@@ -81,9 +81,9 @@ fun performOperation(thingId: String, operationId: String,
 				}
 			} ?: performOperationRequest(operation.target, operation.method, emptyMap(), onComplete)
 
-		} ?: onComplete(Result.of { throw ApioException("Thing $it doesn't have the operation $operationId") })
+		} ?: onComplete(Result.of(null, { ApioException("Thing $it doesn't have the operation $operationId") }))
 
-	} ?: onComplete(Result.of { throw ApioException("Thing not found") })
+	} ?: onComplete(Result.of(null, { ApioException("Thing not found") }))
 }
 
 fun performOperationRequest(url: String, method: String, attributes: Map<String, Any>,
